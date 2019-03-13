@@ -1,18 +1,18 @@
-import { Dungeon } from "../models/dungeon";
 import { Place } from "../models/place";
+import { Chart } from "../models/chart";
 
 export class ConsolePrinter {
-    print(dungeon: Dungeon){
+    public print(building: Chart) {
         let mapPrint = "";
-        for(let x = dungeon.minWidth; x <= dungeon.maxWidth; x++){
-            for(let y = dungeon.minHeight; y <= dungeon.maxHeight; y++){
-                const currentPlace: Place = dungeon.placesDictionary[x][y];
-                if(currentPlace != null){
+        for (let x = building.firstWidthPosition; x <= building.lastWidthPosition; x++) {
+            for (let y = building.firstHeightPosition; y <= building.lastHeightPosition; y++) {
+                const currentPlace: Place = building.places[x][y];
+                if (currentPlace != null) {
                     mapPrint += currentPlace.type.toString();
                 }
             }
             mapPrint += "\n";
         }
         console.log(mapPrint);
-    }    
+    }
 }

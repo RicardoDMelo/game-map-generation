@@ -1,11 +1,11 @@
 import { PlaceType } from "../enums/place-type";
 
 export class Place {
-    type: PlaceType= PlaceType.Empty;
-    x: number = 0;
-    y: number = 0;
-    left: Place | null = null;
-    right: Place | null = null;
-    top: Place | null = null;
-    bottom: Place | null = null;
+    public type: PlaceType = PlaceType.Empty;
+    public x: number = 0;
+    public y: number = 0;
+    public left: Place | null = null;
+    public right: Place | null = null;
+    public top: Place | null = null;
+    public bottom: Place | null = null;
 }

@@ -1,4 +1,4 @@
-import { DungeonBuilder } from "./dungeon.builder";
+import { BuildingBuilder } from "./builders/building.builder";
 
-const builder = new DungeonBuilder();
+const builder = new BuildingBuilder();
 builder.generateMap();

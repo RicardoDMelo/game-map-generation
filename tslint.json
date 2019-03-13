@@ -10,7 +10,8 @@
         "quotemark": true,
         "interface-name": false,
         "ordered-imports": false,
-        "trailing-comma": false
+        "trailing-comma": false,
+        "align": false
     },
     "rulesDirectory": []
 }
