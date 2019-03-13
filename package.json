@@ -11,5 +11,8 @@
   "license": "ISC",
   "devDependencies": {
     "typescript": "^3.3.3333"
+  },
+  "dependencies": {
+    "@types/node": "^11.11.3"
   }
 }

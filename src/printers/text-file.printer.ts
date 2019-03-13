@@ -1,8 +1,9 @@
 import { Place } from "../models/place";
 import { Chart } from "../models/chart";
+import fs from "fs";
 import { IPrinter } from "./interface.printer";
 
-export class ConsolePrinter implements IPrinter {
+export class TextFilePrinter implements IPrinter {
     public print(building: Chart): void {
         let mapPrint = "";
         for (let x = building.firstWidthPosition; x <= building.lastWidthPosition; x++) {
@@ -14,6 +15,11 @@ export class ConsolePrinter implements IPrinter {
             }
             mapPrint += "\n";
         }
-        console.log(mapPrint);
+        const dir = `${__dirname}/prints`;
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir);
+        }
+        fs.writeFileSync(`${dir}/test`, mapPrint);
+        console.log("Printed to file");
     }
 }

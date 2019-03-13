@@ -1,5 +1,4 @@
 import { Building } from "../models/building";
-import { ConsolePrinter } from "../printers/console.printer";
 import { getRandom } from "../helpers/utils";
 import {
     BUILDING_WIDTH_MAX,
@@ -13,6 +12,8 @@ import { IBuilder } from "./interface.builder";
 import { Chart } from "../models/chart";
 import { Dimensions } from "../models/dimensions";
 import { Coordinate } from "../models/coordinate";
+import { PlaceType } from "../enums/place-type";
+import { TextFilePrinter } from "../printers/text-file.printer";
 
 export class BuildingBuilder implements IBuilder {
     public generateMap = (): Chart => {
@@ -26,7 +27,7 @@ export class BuildingBuilder implements IBuilder {
         };
         const newBuilding = new Building(buildingDimensions);
         this.fillBuilding(newBuilding, roomDimensions);
-        const printer = new ConsolePrinter();
+        const printer = new TextFilePrinter();
         printer.print(newBuilding);
         return newBuilding;
     }
@@ -34,12 +35,19 @@ export class BuildingBuilder implements IBuilder {
     public generateCustomMap = (buildingDimensions: Dimensions, roomMaxDimension: Dimensions): Chart => {
         const newBuilding = new Building(buildingDimensions);
         this.fillBuilding(newBuilding, roomMaxDimension);
-        const printer = new ConsolePrinter();
+        const printer = new TextFilePrinter();
         printer.print(newBuilding);
         return newBuilding;
     }
 
     private fillBuilding(building: Building, roomMaxDimension: Dimensions) {
+        let filled = false;
+        do {
+            filled = this.createRoom(building, roomMaxDimension);
+        } while (!filled);
+    }
+
+    private createRoom(building: Building, roomMaxDimension: Dimensions) {
         const startPosition: Coordinate = {
             x: getRandom(0, building.maxWidth),
             y: getRandom(0, building.maxHeight)
@@ -52,14 +60,15 @@ export class BuildingBuilder implements IBuilder {
         let counterHeight = 0;
         let counterWidth = 0;
         let roomCreated = false;
-        while (roomSize.width > ROOM_WIDTH_MIN && roomSize.height > ROOM_HEIGHT_MIN) {
-            while (
-                counterHeight < building.maxHeight ||
-                counterWidth < building.maxWidth
-            ) {
+        while (!roomCreated && roomSize.width > ROOM_WIDTH_MIN && roomSize.height > ROOM_HEIGHT_MIN) {
+            while (!roomCreated && (counterHeight < building.maxHeight || counterWidth < building.maxWidth)) {
                 if (building.isEnoughWidth(building.maxWidth, startPosition, roomSize.width)) {
                     if (building.isEnoughHeight(building.maxHeight, startPosition, roomSize.height)) {
-                        // pode plotar
+                        for (let x = startPosition.x; x < (roomSize.width + startPosition.x); x++) {
+                            for (let y = startPosition.y; y < (roomSize.height + startPosition.y); y++) {
+                                building.addPlace(x, y, PlaceType.Floor);
+                            }
+                        }
                         roomCreated = true;
                     } else {
                         if (startPosition.y === 0) {
@@ -83,5 +92,6 @@ export class BuildingBuilder implements IBuilder {
                 roomSize.height--;
             }
         }
+        return !(roomSize.width > ROOM_WIDTH_MIN && roomSize.height > ROOM_HEIGHT_MIN);
     }
 }

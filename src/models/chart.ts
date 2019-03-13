@@ -78,7 +78,7 @@ export class Chart {
         let currentPosition = position.x;
         let stillEmpty: boolean = true;
         while (currentPosition < lastWidthPosition && stillEmpty) {
-            const currentPlace: Place = this.places[currentPosition][position.y];
+            const currentPlace: Place = this.places[currentPosition - 1][position.y - 1];
             if (currentPlace != null && currentPlace.type !== PlaceType.Empty) {
                 stillEmpty = false;
             } else {
@@ -94,7 +94,7 @@ export class Chart {
         let currentPosition = position.y;
         let stillEmpty: boolean = true;
         while (currentPosition < lastWidthPosition && stillEmpty) {
-            const currentPlace: Place = this.places[position.x][currentPosition];
+            const currentPlace: Place = this.places[position.x - 1][currentPosition - 1];
             if (currentPlace != null && currentPlace.type !== PlaceType.Empty) {
                 stillEmpty = false;
             } else {
