@@ -5,6 +5,7 @@ import { Coordinate } from "./coordinate";
 export class Chart {
     public placesList: Place[];
     public places: any;
+    public started = false;
 
     public firstHeightPosition: number = 0;
     public lastHeightPosition: number = 0;
@@ -16,8 +17,17 @@ export class Chart {
         this.places = {};
     }
 
-    public addPlace(x: number, y: number, type: PlaceType) {
-        this.initializeNeighbors(x, y);
+    public getPlaceType(position: Coordinate): PlaceType {
+        return this.places[position.x] != null && this.places[position.x][position.y] != null ?
+            this.places[position.x][position.y].type : PlaceType.Empty;
+    }
+
+    public addPlace(position: Coordinate, type: PlaceType) {
+        const x = position.x;
+        const y = position.y;
+        if (type !== PlaceType.Empty) this.started = true;
+
+        this.initializePlace(x, y);
 
         if (y < this.firstHeightPosition) {
             this.firstHeightPosition = y;
@@ -38,25 +48,25 @@ export class Chart {
         place.type = type;
 
         // Check left
-        if (this.places[x - 1][y] != null) {
+        if (this.places[x - 1] != null && this.places[x - 1][y] != null) {
             place.left = this.places[x - 1][y];
             this.places[x - 1][y].right = place;
         }
 
         // Check Right
-        if (this.places[x + 1][y] != null) {
+        if (this.places[x + 1] != null && this.places[x + 1][y] != null) {
             place.right = this.places[x + 1][y];
             this.places[x + 1][y].left = place;
         }
 
         // Check Top
-        if (this.places[x][y + 1] != null) {
+        if (this.places[x] != null && this.places[x][y + 1] != null) {
             place.top = this.places[x][y + 1];
             this.places[x][y + 1].bottom = place;
         }
 
         // Check Bottom
-        if (this.places[x][y - 1] != null) {
+        if (this.places[x] != null && this.places[x][y - 1] != null) {
             place.bottom = this.places[x][y - 1];
             this.places[x][y - 1].top = place;
         }
@@ -65,56 +75,8 @@ export class Chart {
         this.places[x][y] = place;
     }
 
-    public isEnoughWidth(lastWidthPosition: number, startPosition: Coordinate, widthCheck: number): boolean {
-        return this.getEmptyWidthFromPositionToEnd(lastWidthPosition, startPosition) > widthCheck;
-    }
-
-    public isEnoughHeight(lastHeightPosition: number, startPosition: Coordinate, heightCheck: number): boolean {
-        return this.getEmptyHeightFromPositionToEnd(lastHeightPosition, startPosition) > heightCheck;
-    }
-
-    public getEmptyWidthFromPositionToEnd(lastWidthPosition: number, position: Coordinate): number {
-        let quantity = 0;
-        let currentPosition = position.x;
-        let stillEmpty: boolean = true;
-        while (currentPosition < lastWidthPosition && stillEmpty) {
-            const currentPlace: Place = this.places[currentPosition - 1][position.y - 1];
-            if (currentPlace != null && currentPlace.type !== PlaceType.Empty) {
-                stillEmpty = false;
-            } else {
-                quantity++;
-            }
-            currentPosition++;
-        }
-        return quantity;
-    }
-
-    public getEmptyHeightFromPositionToEnd(lastWidthPosition: number, position: Coordinate): number {
-        let quantity = 0;
-        let currentPosition = position.y;
-        let stillEmpty: boolean = true;
-        while (currentPosition < lastWidthPosition && stillEmpty) {
-            const currentPlace: Place = this.places[position.x - 1][currentPosition - 1];
-            if (currentPlace != null && currentPlace.type !== PlaceType.Empty) {
-                stillEmpty = false;
-            } else {
-                quantity++;
-            }
-            currentPosition++;
-        }
-        return quantity;
-    }
-
-    private initializeNeighbors(x: number, y: number) {
-        this.places[x] = this.places[x] || new Place();
-        this.places[x - 1] = this.places[x - 1] || new Place();
-        this.places[x + 1] = this.places[x + 1] || new Place();
-
+    private initializePlace(x: number, y: number) {
+        this.places[x] = this.places[x] || {};
         this.places[x][y] = this.places[x][y] || new Place();
-
-        this.places[x][y - 1] = this.places[x][y - 1] || new Place();
-        this.places[x][y + 1] = this.places[x][y + 1] || new Place();
-        this.places[x - 1][y] = this.places[x - 1][y] || new Place();
-        this.places[x + 1][y] = this.places[x + 1][y] || new Place();
     }
 }
