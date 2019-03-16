@@ -1,6 +1,6 @@
 export enum PlaceType {
-    Empty = "   ",
+    Empty = " . ",
     Wall = " # ",
-    Floor = " + ",
+    Floor = "   ",
     Door = " D ",
 }

@@ -21,49 +21,49 @@ export class FiniteChart extends Chart {
     }
 
     public isEnoughWidth(startPosition: Coordinate, widthCheck: number): boolean {
-        return this.getEmptyWidthFromPositionToEnd(startPosition) > widthCheck;
+        return this.getEmptyWidthFromPositionToEnd(startPosition) >= widthCheck;
     }
 
     public isEnoughHeight(startPosition: Coordinate, heightCheck: number): boolean {
-        return this.getEmptyHeightFromPositionToEnd(startPosition) > heightCheck;
+        return this.getEmptyHeightFromPositionToEnd(startPosition) >= heightCheck;
     }
 
     public getEmptyWidthFromPositionToEnd(position: Coordinate): number {
         let quantity = 0;
-        let currentPosition = position.x;
-        let stillEmpty: boolean = true;
-        while (currentPosition < this.maxWidth && stillEmpty && currentPosition > 0 && position.y > 0) {
-            const currentPlace: Place = this.places[currentPosition - 1][position.y - 1];
-            if (currentPlace != null && currentPlace.type !== PlaceType.Empty) {
-                stillEmpty = false;
-            } else {
-                quantity++;
+
+        if (position.x > 0 && position.y > 0) {
+            for (let currentPosition = position.x; currentPosition < this.maxWidth - 1; currentPosition++) {
+                const currentPlace: Place = this.getPlace({ x: currentPosition, y: position.y });
+                if (currentPlace != null && currentPlace.type === PlaceType.Empty) {
+                    quantity++;
+                } else {
+                    break;
+                }
             }
-            currentPosition++;
         }
         return quantity;
     }
 
     public getEmptyHeightFromPositionToEnd(position: Coordinate): number {
         let quantity = 0;
-        let currentPosition = position.y;
-        let stillEmpty: boolean = true;
-        while (currentPosition < this.maxHeight && stillEmpty && currentPosition > 0 && position.x > 0) {
-            const currentPlace: Place = this.places[position.x - 1][currentPosition - 1];
-            if (currentPlace != null && currentPlace.type !== PlaceType.Empty) {
-                stillEmpty = false;
-            } else {
-                quantity++;
+
+        if (position.x > 0 && position.y > 0) {
+            for (let currentPosition = position.y; currentPosition < this.maxHeight - 1; currentPosition++) {
+                const currentPlace: Place = this.getPlace({ x: position.x, y: currentPosition });
+                if (currentPlace != null && currentPlace.type === PlaceType.Empty) {
+                    quantity++;
+                } else {
+                    break;
+                }
             }
-            currentPosition++;
         }
         return quantity;
     }
 
     private initializeEmpty(dimensions: Dimensions) {
-        for (let x = 0; x <= dimensions.width; x++) {
-            for (let y = 0; y <= dimensions.height; y++) {
-                this.addPlace({x, y}, PlaceType.Empty);
+        for (let x = 0; x < dimensions.width; x++) {
+            for (let y = 0; y < dimensions.height; y++) {
+                this.addPlace({ x, y }, PlaceType.Empty);
             }
         }
     }

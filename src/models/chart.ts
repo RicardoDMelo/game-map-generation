@@ -3,8 +3,6 @@ import { PlaceType } from "../enums/place-type";
 import { Coordinate } from "./coordinate";
 
 export class Chart {
-    public placesList: Place[];
-    public places: any;
     public started = false;
 
     public firstHeightPosition: number = 0;
@@ -12,9 +10,17 @@ export class Chart {
     public firstWidthPosition: number = 0;
     public lastWidthPosition: number = 0;
 
+    private placesList: Place[];
+    private places: any;
+
     constructor() {
         this.placesList = [];
         this.places = {};
+    }
+
+    public getPlace(position: Coordinate): Place {
+        return this.places[position.x] != null && this.places[position.x][position.y] != null ?
+            this.places[position.x][position.y] : null;
     }
 
     public getPlaceType(position: Coordinate): PlaceType {

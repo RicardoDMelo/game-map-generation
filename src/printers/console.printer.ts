@@ -1,19 +1,9 @@
-import { Place } from "../models/place";
 import { Chart } from "../models/chart";
 import { IPrinter } from "./interface.printer";
+import { TextPrinter } from "./text.printer";
 
-export class ConsolePrinter implements IPrinter {
+export class ConsolePrinter extends TextPrinter implements IPrinter  {
     public print(building: Chart): void {
-        let mapPrint = "";
-        for (let x = building.firstWidthPosition; x <= building.lastWidthPosition; x++) {
-            for (let y = building.firstHeightPosition; y <= building.lastHeightPosition; y++) {
-                const currentPlace: Place = building.places[x][y];
-                if (currentPlace != null) {
-                    mapPrint += currentPlace.type.toString();
-                }
-            }
-            mapPrint += "\n";
-        }
-        console.log(mapPrint);
+        console.log(this.getChartString(building));
     }
 }

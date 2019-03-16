@@ -40,5 +40,11 @@ export class Building extends FiniteChart {
                 y: y === top ? y + 1 : y - 1
             }, PlaceType.Wall);
         }
+        if ((y === top || y === bottom) && (x === left || x === right)) {
+            this.addPlace({
+                x: x === right ? x + 1 : x === left ? x - 1 : x,
+                y: y === top ? y + 1 : y === bottom ? y - 1 : y
+            }, PlaceType.Wall);
+        }
     }
 }
