@@ -62,6 +62,7 @@ export class BuildingBuilder implements IBuilder {
         };
 
         let roomCreated = false;
+        const randomDecreaseSize = getRandom(1, 2);
 
         while (!roomCreated && roomSize.width >= ROOM_WIDTH_MIN && roomSize.height >= ROOM_HEIGHT_MIN) {
             const roomPosition = this.getRoomPosition(building, roomSize);
@@ -70,11 +71,31 @@ export class BuildingBuilder implements IBuilder {
                 roomCreated = true;
             }
             if (!roomCreated) {
-                roomSize.width--;
-                roomSize.height--;
+                this.decreaseRoomSize(roomSize, randomDecreaseSize);
             }
         }
         return !(roomSize.width >= ROOM_WIDTH_MIN && roomSize.height >= ROOM_HEIGHT_MIN);
+    }
+
+    private decreaseRoomSize(roomSize: Dimensions, randomDecreaseSize: number) {
+        if (roomSize.width === ROOM_WIDTH_MIN && roomSize.height === ROOM_HEIGHT_MIN) {
+            roomSize.height--;
+            roomSize.width--;
+            return;
+        }
+        if (randomDecreaseSize === 1) {
+            if (roomSize.width > ROOM_WIDTH_MIN) {
+                roomSize.width--;
+            } else {
+                roomSize.height--;
+            }
+        } else {
+            if (roomSize.height > ROOM_HEIGHT_MIN) {
+                roomSize.height--;
+            } else {
+                roomSize.width--;
+            }
+        }
     }
 
     private isCorner(building: Building, position: Coordinate): boolean {
@@ -116,7 +137,7 @@ export class BuildingBuilder implements IBuilder {
                 if (!building.started) {
                     position = { x: newX, y: newY };
                 } else if (isWall && !isCorner) {
-                    position = this.getNextRoomPosition(building, roomSize, { x: newX, y: newY });
+                    position = this.getNextRoomSide(building, roomSize, { x: newX, y: newY });
                 }
 
                 if (position != null) {
@@ -129,7 +150,7 @@ export class BuildingBuilder implements IBuilder {
         return null;
     }
 
-    private getNextRoomPosition(building: Building, roomSize: Dimensions, currentPosition: Coordinate)
+    private getNextRoomSide(building: Building, roomSize: Dimensions, currentPosition: Coordinate)
         : Coordinate | null {
         const currentPlace = building.getPlace(currentPosition);
         if (currentPlace.type !== PlaceType.Wall) {
