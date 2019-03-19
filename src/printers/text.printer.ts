@@ -6,13 +6,17 @@ export class TextPrinter {
     public getChartString(chart: Chart): string {
         let mapPrint = "";
 
-        let spaces = "";
+        let spacesHeight = "";
         for (const quantity of chart.lastHeightPosition.toString()) {
-            spaces += " ";
+            spacesHeight += " ";
+        }
+        let spacesWidth = "";
+        for (const quantity of chart.lastWidthPosition.toString()) {
+            spacesWidth += " ";
         }
 
         for (let y = chart.lastHeightPosition; y >= chart.firstHeightPosition; y--) {
-            mapPrint += " " + y + spaces.slice(0, -(y.toString().length));
+            mapPrint += " " + y + spacesHeight.slice(0, -(y.toString().length));
             for (let x = chart.firstWidthPosition; x <= chart.lastWidthPosition; x++) {
                 const currentPlace: Place = chart.getPlace({ x, y });
                 if (currentPlace != null) {
@@ -23,7 +27,7 @@ export class TextPrinter {
         }
         mapPrint += "   ";
         for (let x = chart.firstWidthPosition; x <= chart.lastWidthPosition; x++) {
-            mapPrint += " " + x + " ";
+            mapPrint += " " + x + spacesWidth.slice(0, -(x.toString().length));
         }
         mapPrint += "\n";
         return mapPrint;

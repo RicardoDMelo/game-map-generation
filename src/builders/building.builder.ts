@@ -53,7 +53,62 @@ export class BuildingBuilder implements IBuilder {
         do {
             filled = this.createRoom(building, roomMaxDimension);
         } while (!filled);
+        this.removeDoubleWalls(building);
     }
+
+    private removeDoubleWalls(building: Building) {
+        const removedPlaces: any = {};
+        for (let y = 0; y <= building.maxHeight; y++) {
+            for (let x = 0; x <= building.maxWidth; x++) {
+                const place = building.getPlace({ x, y });
+                if (place != null && place.type === PlaceType.Wall) {
+                    const xorLeftRight = (this.isWall(place.left) || this.isWall(place.right)) &&
+                        !(this.isWall(place.left) && this.isWall(place.right));
+                    const xorTopBottom = (this.isWall(place.top) || this.isWall(place.bottom)) &&
+                        !(this.isWall(place.top) && this.isWall(place.bottom));
+
+                    const isPlaceRemoved = removedPlaces[place.x] != null && removedPlaces[place.x][place.y];
+                    const removeY: boolean = this.verifyIfTheresWallX(place, isPlaceRemoved) && xorLeftRight;
+                    const removeX: boolean = this.verifyIfTheresWallY(place, isPlaceRemoved) && xorTopBottom;
+                    if (removeY || removeX) {
+                        if (removedPlaces[place.x] == null) removedPlaces[place.x] = {};
+                        removedPlaces[place.x][place.y] = true;
+                        place.type = PlaceType.Floor;
+                    }
+                }
+            }
+        }
+    }
+
+    private isWall(place: Place | null): boolean {
+        return place != null && place.type === PlaceType.Wall;
+    }
+
+    private verifyIfTheresWallX(place: Place | null, alreadyRemovedBottom: boolean) {
+        const isRight = place != null && place.top != null && place.bottom != null &&
+            this.isWall(place.right) && this.isWall(place.top) && this.isWall(place.top.right) &&
+            (this.isWall(place.bottom.right) || alreadyRemovedBottom);
+
+        const isLeft = place != null && place.top != null && place.bottom != null &&
+            this.isWall(place.left) && this.isWall(place.top) && this.isWall(place.top.left) &&
+            (this.isWall(place.bottom.left) || alreadyRemovedBottom);
+
+        return this.isWall(place) && (isLeft || isRight);
+    }
+
+
+    private verifyIfTheresWallY(place: Place | null, alreadyRemovedLeft: boolean) {
+        const isTop = place != null && place.right != null && place.left != null &&
+            this.isWall(place.top) && this.isWall(place.right) && this.isWall(place.right.top) &&
+            (this.isWall(place.left.top) || alreadyRemovedLeft);
+
+        const isBottom = place != null && place.right != null && place.left != null &&
+            this.isWall(place.bottom) && this.isWall(place.right) && this.isWall(place.right.bottom) &&
+            (this.isWall(place.left.bottom) || alreadyRemovedLeft);
+
+        return this.isWall(place) && (isTop || isBottom);
+    }
+
 
     private createRoom(building: Building, roomMaxDimension: Dimensions) {
         const roomSize: Dimensions = {
@@ -143,7 +198,6 @@ export class BuildingBuilder implements IBuilder {
                 if (position != null) {
                     return position;
                 }
-
             }
         }
 
