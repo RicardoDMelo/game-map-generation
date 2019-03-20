@@ -3,6 +3,7 @@ import { Dimensions } from "./dimensions";
 import { PlaceType } from "../enums/place-type";
 import { Coordinate } from "./coordinate";
 import { Place } from "./place";
+import { ReadOnlyPlace } from "./readonly-place";
 
 export class FiniteChart extends Chart {
 
@@ -18,6 +19,22 @@ export class FiniteChart extends Chart {
         super();
         this.initializeEmpty(dimensions);
         this.dimensions = dimensions;
+    }
+
+    public *iteratePlaces(): IterableIterator<ReadOnlyPlace> {
+        for (let y = 0; y <= this.maxHeight; y++) {
+            for (let x = 0; x <= this.maxWidth; x++) {
+                yield this.getPlace({ x, y });
+            }
+        }
+    }
+
+    public *iteratePosition(): IterableIterator<Coordinate> {
+        for (let y = 0; y <= this.maxHeight; y++) {
+            for (let x = 0; x <= this.maxWidth; x++) {
+                yield { x, y };
+            }
+        }
     }
 
     public isEnoughWidth(startPosition: Coordinate, widthCheck: number): boolean {

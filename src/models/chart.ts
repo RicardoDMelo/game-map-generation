@@ -1,6 +1,7 @@
 import { Place } from "./place";
 import { PlaceType } from "../enums/place-type";
 import { Coordinate } from "./coordinate";
+import { ReadOnlyPlace } from "./readonly-place";
 
 export class Chart {
     public started = false;
@@ -10,15 +11,15 @@ export class Chart {
     public firstWidthPosition: number = 0;
     public lastWidthPosition: number = 0;
 
-    private placesList: Place[];
-    private places: any;
+    protected placesList: Place[];
+    protected places: any;
 
     constructor() {
         this.placesList = [];
         this.places = {};
     }
 
-    public getPlace(position: Coordinate): Place {
+    public getPlace(position: Coordinate): ReadOnlyPlace {
         return this.places[position.x] != null && this.places[position.x][position.y] != null ?
             this.places[position.x][position.y] : null;
     }
@@ -79,6 +80,12 @@ export class Chart {
 
         this.placesList.push(place);
         this.places[x][y] = place;
+    }
+
+    public changePlaceType(position: Coordinate, type: PlaceType) {
+        const place = this.places[position.x] != null && this.places[position.x][position.y] != null ?
+            this.places[position.x][position.y] : null;
+        place.type = type;
     }
 
     private initializePlace(x: number, y: number) {

@@ -11,9 +11,11 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/underscore": "^1.8.13",
     "typescript": "^3.3.3333"
   },
   "dependencies": {
-    "@types/node": "^11.11.3"
+    "@types/node": "^11.11.3",
+    "underscore": "^1.9.1"
   }
 }

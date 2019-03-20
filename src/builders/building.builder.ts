@@ -14,8 +14,9 @@ import { Dimensions } from "../models/dimensions";
 import { Coordinate } from "../models/coordinate";
 import { PlaceType } from "../enums/place-type";
 import { TextFilePrinter } from "../printers/text-file.printer";
-import { ConsolePrinter } from "../printers/console.printer";
 import { Place } from "../models/place";
+import * as utils from "./building-utils.builder";
+import _ from "underscore";
 
 export class BuildingBuilder implements IBuilder {
     public generateMap = (): Chart => {
@@ -31,13 +32,8 @@ export class BuildingBuilder implements IBuilder {
         this.fillBuilding(building, roomDimensions);
         const printer = new TextFilePrinter();
         printer.print(building);
-        this.showOnConsole(building);
+        utils.showOnConsole(building);
         return building;
-    }
-
-    public showOnConsole(building: Building) {
-        const printer = new ConsolePrinter();
-        printer.print(building);
     }
 
     public generateCustomMap = (buildingDimensions: Dimensions, roomMaxDimension: Dimensions): Chart => {
@@ -54,61 +50,89 @@ export class BuildingBuilder implements IBuilder {
             filled = this.createRoom(building, roomMaxDimension);
         } while (!filled);
         this.removeDoubleWalls(building);
+        this.createDoors(building);
     }
 
-    private removeDoubleWalls(building: Building) {
-        const removedPlaces: any = {};
-        for (let y = 0; y <= building.maxHeight; y++) {
-            for (let x = 0; x <= building.maxWidth; x++) {
-                const place = building.getPlace({ x, y });
-                if (place != null && place.type === PlaceType.Wall) {
-                    const xorLeftRight = (this.isWall(place.left) || this.isWall(place.right)) &&
-                        !(this.isWall(place.left) && this.isWall(place.right));
-                    const xorTopBottom = (this.isWall(place.top) || this.isWall(place.bottom)) &&
-                        !(this.isWall(place.top) && this.isWall(place.bottom));
+    private createDoors(building: Building) {
 
-                    const isPlaceRemoved = removedPlaces[place.x] != null && removedPlaces[place.x][place.y];
-                    const removeY: boolean = this.verifyIfTheresWallX(place, isPlaceRemoved) && xorLeftRight;
-                    const removeX: boolean = this.verifyIfTheresWallY(place, isPlaceRemoved) && xorTopBottom;
-                    if (removeY || removeX) {
-                        if (removedPlaces[place.x] == null) removedPlaces[place.x] = {};
-                        removedPlaces[place.x][place.y] = true;
-                        place.type = PlaceType.Floor;
+        for (const cornerCoor of building.corners) {
+            const corner = building.getPlace(cornerCoor);
+            const cornerX = _.min(building.corners, (cornerTmp) => {
+                if (corner.y === cornerTmp.y)
+                    return corner.x - cornerTmp.x;
+                else
+                    return null;
+            });
+            const cornerY = _.min(building.corners, (cornerTmp) => {
+                if (corner.x === cornerTmp.x)
+                    return corner.y - cornerTmp.y;
+                else
+                    return null;
+            });
+            const openingTypeX: number = getRandom(1, 5);
+            this.createDoor(building, corner, cornerX, openingTypeX);
+            const openingTypeY: number = getRandom(1, 5);
+            this.createDoor(building, corner, cornerY, openingTypeY);
+        }
+    }
+
+    private createDoor(building: Building, corner1: Coordinate, corner2: Coordinate, openingType: number) {
+        if (openingType === 1) {
+            // Door
+            let door: Coordinate;
+            if (corner1.x === corner2.x) {
+                door = { x: corner1.x, y: getRandom(corner1.y + 1, corner2.y - 1) };
+            } else {
+                door = { x: getRandom(corner1.x + 1, corner2.x - 1), y: corner1.y };
+            }
+            building.changePlaceType(door, PlaceType.Door);
+        } else if (openingType === 2) {
+            // Big Door
+            const getRandomSize = (maxValue: number) => {
+                if (maxValue > 3) return getRandom(2, maxValue - 1);
+                else return 2;
+            };
+            let delta: number;
+            let randomSize: number;
+            let randomStartPosition: number;
+            if (corner1.x === corner2.x) {
+                delta = corner2.y - corner1.y - 1;
+                randomSize = getRandomSize(delta);
+                if (corner2.y - randomSize < corner1.y + 1) {
+                    // can't create a wall
+                    openingType = 3;
+                } else {
+                    randomStartPosition = getRandom(corner1.y + 1, corner2.y - randomSize);
+                    for (let y = randomStartPosition; y < randomStartPosition + randomSize; y++) {
+                        building.changePlaceType({ x: corner1.x, y }, PlaceType.Door);
                     }
+                }
+            } else {
+                delta = corner2.x - corner1.x - 1;
+                randomSize = getRandomSize(delta);
+                if (corner2.x - randomSize < corner1.x + 1) {
+                    // can't create a wall
+                    openingType = 3;
+                } else {
+                    randomStartPosition = getRandom(corner1.x, corner2.x - randomSize);
+                    for (let x = randomStartPosition; x < randomStartPosition + randomSize; x++) {
+                        building.changePlaceType({ x, y: corner1.y }, PlaceType.Door);
+                    }
+                }
+            }
+        } else if (openingType === 3) {
+            // Remove Wall
+            if (corner1.x === corner2.x) {
+                for (let y = corner1.y + 1; y < corner2.y; y++) {
+                    building.changePlaceType({ x: corner1.x, y }, PlaceType.Door);
+                }
+            } else {
+                for (let x = corner1.x + 1; x < corner2.x; x++) {
+                    building.changePlaceType({ x, y: corner1.y }, PlaceType.Door);
                 }
             }
         }
     }
-
-    private isWall(place: Place | null): boolean {
-        return place != null && place.type === PlaceType.Wall;
-    }
-
-    private verifyIfTheresWallX(place: Place | null, alreadyRemovedBottom: boolean) {
-        const isRight = place != null && place.top != null && place.bottom != null &&
-            this.isWall(place.right) && this.isWall(place.top) && this.isWall(place.top.right) &&
-            (this.isWall(place.bottom.right) || alreadyRemovedBottom);
-
-        const isLeft = place != null && place.top != null && place.bottom != null &&
-            this.isWall(place.left) && this.isWall(place.top) && this.isWall(place.top.left) &&
-            (this.isWall(place.bottom.left) || alreadyRemovedBottom);
-
-        return this.isWall(place) && (isLeft || isRight);
-    }
-
-
-    private verifyIfTheresWallY(place: Place | null, alreadyRemovedLeft: boolean) {
-        const isTop = place != null && place.right != null && place.left != null &&
-            this.isWall(place.top) && this.isWall(place.right) && this.isWall(place.right.top) &&
-            (this.isWall(place.left.top) || alreadyRemovedLeft);
-
-        const isBottom = place != null && place.right != null && place.left != null &&
-            this.isWall(place.bottom) && this.isWall(place.right) && this.isWall(place.right.bottom) &&
-            (this.isWall(place.left.bottom) || alreadyRemovedLeft);
-
-        return this.isWall(place) && (isTop || isBottom);
-    }
-
 
     private createRoom(building: Building, roomMaxDimension: Dimensions) {
         const roomSize: Dimensions = {
@@ -117,7 +141,7 @@ export class BuildingBuilder implements IBuilder {
         };
 
         let roomCreated = false;
-        const randomDecreaseSize = getRandom(1, 2);
+        const randomDecreaseSize: boolean = getRandom(0, 1) === 1;
 
         while (!roomCreated && roomSize.width >= ROOM_WIDTH_MIN && roomSize.height >= ROOM_HEIGHT_MIN) {
             const roomPosition = this.getRoomPosition(building, roomSize);
@@ -132,72 +156,31 @@ export class BuildingBuilder implements IBuilder {
         return !(roomSize.width >= ROOM_WIDTH_MIN && roomSize.height >= ROOM_HEIGHT_MIN);
     }
 
-    private decreaseRoomSize(roomSize: Dimensions, randomDecreaseSize: number) {
-        if (roomSize.width === ROOM_WIDTH_MIN && roomSize.height === ROOM_HEIGHT_MIN) {
-            roomSize.height--;
-            roomSize.width--;
-            return;
-        }
-        if (randomDecreaseSize === 1) {
-            if (roomSize.width > ROOM_WIDTH_MIN) {
-                roomSize.width--;
-            } else {
-                roomSize.height--;
-            }
-        } else {
-            if (roomSize.height > ROOM_HEIGHT_MIN) {
-                roomSize.height--;
-            } else {
-                roomSize.width--;
-            }
-        }
-    }
-
-    private isCorner(building: Building, position: Coordinate): boolean {
-        const placeType = building.getPlaceType(position);
-        if (placeType === PlaceType.Wall) {
-            const leftPosition: Coordinate = { x: position.x - 1, y: position.y };
-            const rightPosition: Coordinate = { x: position.x + 1, y: position.y };
-            const topPosition: Coordinate = { x: position.x, y: position.y + 1 };
-            const bottomPosition: Coordinate = { x: position.x - 1, y: position.y - 1 };
-
-            const isLeft = building.getPlaceType(leftPosition) === PlaceType.Wall;
-            const isRight = building.getPlaceType(rightPosition) === PlaceType.Wall;
-            const isTop = building.getPlaceType(topPosition) === PlaceType.Wall;
-            const isBottom = building.getPlaceType(bottomPosition) === PlaceType.Wall;
-
-            return (isLeft && isTop) || (isLeft && isBottom) || (isRight && isTop) || (isRight && isBottom);
-        }
-        return false;
-    }
-
     private getRoomPosition(building: Building, roomSize: Dimensions): Coordinate | null {
         const roomPosition: Coordinate = {
             x: getRandom(1, building.maxWidth - roomSize.width - 1),
             y: getRandom(1, building.maxHeight - roomSize.height - 1)
         };
+        const iteratePosition = building.iteratePosition();
+        for (const coor of iteratePosition) {
+            const newX = roomPosition.x + coor.x < building.maxWidth ?
+                roomPosition.x + coor.x : (roomPosition.x - building.maxWidth + coor.x);
 
-        for (let x = 0; x <= building.maxWidth; x++) {
-            const newX = roomPosition.x + x < building.maxWidth ?
-                roomPosition.x + x : (roomPosition.x - building.maxWidth + x);
+            const newY = roomPosition.y + coor.y < building.maxHeight ?
+                roomPosition.y + coor.y : (roomPosition.y - building.maxHeight + coor.y);
 
-            for (let y = 0; y <= building.maxHeight; y++) {
-                const newY = roomPosition.y + y < building.maxHeight ?
-                    roomPosition.y + y : (roomPosition.y - building.maxHeight + y);
+            const corner = utils.isCorner(building, { x: newX, y: newY });
+            const wall = building.getPlaceType({ x: newX, y: newY }) === PlaceType.Wall;
 
-                const isCorner = this.isCorner(building, { x: newX, y: newY });
-                const isWall = building.getPlaceType({ x: newX, y: newY }) === PlaceType.Wall;
+            let position: Coordinate | null = null;
+            if (!building.started) {
+                position = { x: newX, y: newY };
+            } else if (wall && !corner) {
+                position = this.getNextRoomSide(building, roomSize, { x: newX, y: newY });
+            }
 
-                let position: Coordinate | null = null;
-                if (!building.started) {
-                    position = { x: newX, y: newY };
-                } else if (isWall && !isCorner) {
-                    position = this.getNextRoomSide(building, roomSize, { x: newX, y: newY });
-                }
-
-                if (position != null) {
-                    return position;
-                }
+            if (position != null) {
+                return position;
             }
         }
 
@@ -225,18 +208,50 @@ export class BuildingBuilder implements IBuilder {
             testNewPosition = { x: currentPosition.x, y: currentPosition.y - roomSize.height };
         }
 
-        if (testNewPosition != null && this.checkSpace(building, roomSize, testNewPosition)) {
+        if (testNewPosition != null && utils.hasEnoughSpace(building, roomSize, testNewPosition)) {
             return testNewPosition;
         }
 
         return null;
     }
 
-    private checkSpace(building: Building, roomSize: Dimensions, position: Coordinate): boolean {
-        const isEmpty = building.getPlaceType(position) === PlaceType.Empty;
-        const isEnoughWidth = building.isEnoughWidth(position, roomSize.width);
-        const isEnoughHeight = building.isEnoughHeight(position, roomSize.height);
+    private removeDoubleWalls(building: Building) {
+        const removedPlaces: any = {};
 
-        return isEmpty && isEnoughWidth && isEnoughHeight;
+        const iteratePosition = building.iteratePlaces();
+        for (const place of iteratePosition) {
+            if (place != null && place.type === PlaceType.Wall) {
+                const isPlaceRemoved = removedPlaces[place.x] != null && removedPlaces[place.x][place.y];
+                const removeY: boolean = utils.verifyIfDoubleWallX(place, isPlaceRemoved);
+                const removeX: boolean = utils.verifyIfDoubleWallY(place, isPlaceRemoved);
+                if (removeY || removeX) {
+                    if (removedPlaces[place.x] == null) removedPlaces[place.x] = {};
+                    removedPlaces[place.x][place.y] = true;
+                    building.changePlaceType(place.coordinate, PlaceType.Floor);
+                }
+            }
+        }
+    }
+
+    private decreaseRoomSize(roomSize: Dimensions, decreaseWidthFirst: boolean): Dimensions {
+        if (roomSize.width === ROOM_WIDTH_MIN && roomSize.height === ROOM_HEIGHT_MIN) {
+            roomSize.height--;
+            roomSize.width--;
+            return roomSize;
+        }
+        if (decreaseWidthFirst) {
+            if (roomSize.width > ROOM_WIDTH_MIN) {
+                roomSize.width--;
+            } else {
+                roomSize.height--;
+            }
+        } else {
+            if (roomSize.height > ROOM_HEIGHT_MIN) {
+                roomSize.height--;
+            } else {
+                roomSize.width--;
+            }
+        }
+        return roomSize;
     }
 }
