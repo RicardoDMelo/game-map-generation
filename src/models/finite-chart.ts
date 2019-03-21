@@ -4,6 +4,7 @@ import { PlaceType } from "../enums/place-type";
 import { Coordinate } from "./coordinate";
 import { Place } from "./place";
 import { ReadOnlyPlace } from "./readonly-place";
+import { Side } from "../enums/room-side";
 
 export class FiniteChart extends Chart {
 
@@ -19,6 +20,50 @@ export class FiniteChart extends Chart {
         super();
         this.initializeEmpty(dimensions);
         this.dimensions = dimensions;
+    }
+
+    public *iteratePlacesByDirection(side: Side, startPosition: Coordinate)
+        : IterableIterator<ReadOnlyPlace> {
+        const currentPosition: Coordinate = { x: startPosition.x, y: startPosition.y };
+        const getPlace = (x: number, y: number) => {
+            const coor: Coordinate = { x, y };
+            currentPosition.x = startPosition.x + coor.x < this.maxWidth ?
+                startPosition.x + coor.x : (startPosition.x - this.maxWidth + coor.x);
+
+            currentPosition.y = startPosition.y + coor.y < this.maxHeight ?
+                startPosition.y + coor.y : (startPosition.y - this.maxHeight + coor.y);
+            return this.getPlace(currentPosition);
+        };
+        switch (side) {
+            case Side.Right:
+                for (let y = 0; y <= this.maxHeight; y++) {
+                    for (let x = 0; x <= this.maxWidth; x++) {
+                        yield getPlace(x, y);
+                    }
+                }
+                break;
+            case Side.Left:
+                for (let y = this.maxHeight; y < 0; y--) {
+                    for (let x = this.maxWidth; x < 0; x--) {
+                        yield getPlace(x, y);
+                    }
+                }
+                break;
+            case Side.Top:
+                for (let x = 0; x <= this.maxWidth; x++) {
+                    for (let y = 0; y <= this.maxHeight; y++) {
+                        yield getPlace(x, y);
+                    }
+                }
+                break;
+            case Side.Bottom:
+                for (let x = this.maxWidth; x < 0; x--) {
+                    for (let y = this.maxHeight; y < 0; y--) {
+                        yield getPlace(x, y);
+                    }
+                }
+                break;
+        }
     }
 
     public *iteratePlaces(): IterableIterator<ReadOnlyPlace> {

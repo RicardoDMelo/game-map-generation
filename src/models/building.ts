@@ -2,11 +2,14 @@ import { FiniteChart } from "./finite-chart";
 import { Dimensions } from "./dimensions";
 import { PlaceType } from "../enums/place-type";
 import { Coordinate } from "./coordinate";
-import { isWall } from "../builders/building-utils.builder";
+import { Wall } from "./wall";
 import _ from "underscore";
 
 export class Building extends FiniteChart {
-    public corners: Coordinate[] = [];
+    private _walls: Wall[] = [];
+    public get walls(): Wall[] {
+        return this._walls;
+    }
     constructor(dimensions: Dimensions) {
         super(dimensions);
     }
@@ -27,17 +30,9 @@ export class Building extends FiniteChart {
         }
     }
 
-    public changePlaceType(position: Coordinate, type: PlaceType) {
-        const place = this.places[position.x] != null && this.places[position.x][position.y] != null ?
-            this.places[position.x][position.y] : null;
-
-        if (isWall(place) && type !== PlaceType.Wall) {
-            this.corners = _.reject(this.corners, (corner) => {
-                return corner.x === position.x && corner.y === position.y;
-            });
-        }
-
-        place.type = type;
+    public addWall(wall: Wall) {
+        if (!_.any(this._walls, (el) => el.corner1 === wall.corner1 && el.corner2 === wall.corner2))
+            this._walls.push(wall);
     }
 
     private plotWall(floor: Coordinate, left: number, right: number, top: number, bottom: number) {
@@ -62,7 +57,6 @@ export class Building extends FiniteChart {
                 y: y === top ? y + 1 : y === bottom ? y - 1 : y
             };
             this.addPlace(corner, PlaceType.Wall);
-            this.corners.push(corner);
         }
     }
 }

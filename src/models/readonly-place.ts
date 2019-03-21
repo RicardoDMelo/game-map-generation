@@ -5,8 +5,11 @@ import { Coordinate } from "./coordinate";
 export class ReadOnlyPlace {
     private place: Place;
 
-    constructor(place: Place) {
-        this.place = place;
+    constructor(place: Place | null) {
+        if (place)
+            this.place = place;
+        else
+            this.place = new Place();
     }
 
     public get type(): PlaceType {
@@ -21,24 +24,24 @@ export class ReadOnlyPlace {
     public get y(): number {
         return this.place.y;
     }
-    public get left(): ReadOnlyPlace | null {
+    public get left(): ReadOnlyPlace {
         if (this.place.left)
             return new ReadOnlyPlace(this.place.left);
-        return null;
+        return new ReadOnlyPlace(null);
     }
-    public get right(): ReadOnlyPlace | null {
+    public get right(): ReadOnlyPlace {
         if (this.place.right)
             return new ReadOnlyPlace(this.place.right);
-        return null;
+        return new ReadOnlyPlace(null);
     }
-    public get top(): ReadOnlyPlace | null {
+    public get top(): ReadOnlyPlace {
         if (this.place.top)
             return new ReadOnlyPlace(this.place.top);
-        return null;
+        return new ReadOnlyPlace(null);
     }
-    public get bottom(): ReadOnlyPlace | null {
+    public get bottom(): ReadOnlyPlace {
         if (this.place.bottom)
             return new ReadOnlyPlace(this.place.bottom);
-        return null;
+        return new ReadOnlyPlace(null);
     }
 }

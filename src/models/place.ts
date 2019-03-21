@@ -12,4 +12,8 @@ export class Place {
     public right: Place | null = null;
     public top: Place | null = null;
     public bottom: Place | null = null;
+
+    constructor() {
+        this.type = PlaceType.Empty;
+    }
 }
