@@ -20,8 +20,8 @@ export class Chart {
     }
 
     public getPlace(position: Coordinate): ReadOnlyPlace {
-        return this.places[position.x] != null && this.places[position.x][position.y] != null ?
-            this.places[position.x][position.y] : null;
+        return new ReadOnlyPlace(this.places[position.x] != null && this.places[position.x][position.y] != null ?
+            this.places[position.x][position.y] : null);
     }
 
     public getPlaceType(position: Coordinate): PlaceType {

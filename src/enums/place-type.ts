@@ -4,4 +4,5 @@ export enum PlaceType {
     Corner = " + ",
     Floor = "   ",
     Door = " D ",
+    Gate = " G "
 }

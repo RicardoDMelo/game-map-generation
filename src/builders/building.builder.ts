@@ -24,8 +24,10 @@ import { ReadOnlyPlace } from "../models/readonly-place";
 export class BuildingBuilder implements IBuilder {
     public generateMap = (): Chart => {
         const buildingDimensions: Dimensions = {
-            width: getRandom(BUILDING_WIDTH_MAX / 2, BUILDING_WIDTH_MAX),
-            height: getRandom(BUILDING_HEIGHT_MAX / 2, BUILDING_HEIGHT_MAX)
+            // width: getRandom(BUILDING_WIDTH_MAX / 2, BUILDING_WIDTH_MAX),
+            // height: getRandom(BUILDING_HEIGHT_MAX / 2, BUILDING_HEIGHT_MAX)
+            width: getRandom(BUILDING_WIDTH_MAX, BUILDING_WIDTH_MAX),
+            height: getRandom(BUILDING_HEIGHT_MAX, BUILDING_HEIGHT_MAX)
         };
         const roomDimensions: Dimensions = {
             width: ROOM_WIDTH_MAX,
@@ -54,70 +56,68 @@ export class BuildingBuilder implements IBuilder {
         } while (!filled);
         this.removeDoubleWalls(building);
         this.defineWalls(building);
+        // utils.showOnConsole(building);
         this.createDoors(building);
     }
 
     private defineWalls(building: Building) {
         for (const place of building.iteratePlaces()) {
+            const iterateAddWall = (iterator: IterableIterator<ReadOnlyPlace>, direction: string) => {
+                const directionIterate = direction === "y" ? "y" : "x";
+                const directionFixed = direction === "x" ? "y" : "x";
+                let lastPlace: ReadOnlyPlace = place;
+                for (const newPlace of iterator) {
+                    let currentPlace = newPlace;
+                    if (place.x !== newPlace.x || place.y !== newPlace.y) {
+                        if (place[directionFixed] !== currentPlace[directionFixed]) {
+                            currentPlace = lastPlace;
+                        }
+                        lastPlace = currentPlace;
+                        const isCorner = utils.isCorner(currentPlace);
+                        if (isCorner || currentPlace !== newPlace) {
+                            const distance = Math.abs(place[directionIterate] - newPlace[directionIterate]);
+                            if (distance >= 2) {
+                                if (newPlace[directionIterate] > place[directionIterate]) {
+                                    building.addWall(new Wall(place.coordinate, currentPlace.coordinate));
+                                } else {
+                                    building.addWall(new Wall(currentPlace.coordinate, place.coordinate));
+                                }
+                            }
+                            break;
+                        }
+                    }
+                    if (place[directionFixed] !== newPlace[directionFixed]) break;
+                }
+            };
+
             if (utils.isWall(place)) {
-                let sideX: Side | null = null;
-                let sideY: Side | null = null;
                 if (utils.isWall(place.left) && utils.isWall(place.top)) {
-                    sideX = Side.Left;
-                    sideY = Side.Top;
+                    const iteratePlaceX = building.iteratePlacesByDirection(Side.Left, place.coordinate);
+                    const iteratePlaceY = building.iteratePlacesByDirection(Side.Top, place.coordinate);
+
+                    iterateAddWall(iteratePlaceX, "x");
+                    iterateAddWall(iteratePlaceY, "y");
                 }
                 if (utils.isWall(place.left) && utils.isWall(place.bottom)) {
-                    sideX = Side.Left;
-                    sideY = Side.Bottom;
+                    const iteratePlaceX = building.iteratePlacesByDirection(Side.Left, place.coordinate);
+                    const iteratePlaceY = building.iteratePlacesByDirection(Side.Bottom, place.coordinate);
+
+                    iterateAddWall(iteratePlaceX, "x");
+                    iterateAddWall(iteratePlaceY, "y");
                 }
                 if (utils.isWall(place.right) && utils.isWall(place.top)) {
-                    sideX = Side.Right;
-                    sideY = Side.Top;
+                    const iteratePlaceX = building.iteratePlacesByDirection(Side.Right, place.coordinate);
+                    const iteratePlaceY = building.iteratePlacesByDirection(Side.Top, place.coordinate);
+
+                    iterateAddWall(iteratePlaceX, "x");
+                    iterateAddWall(iteratePlaceY, "y");
                 }
                 if (utils.isWall(place.right) && utils.isWall(place.bottom)) {
-                    sideX = Side.Right;
-                    sideY = Side.Bottom;
-                }
+                    const iteratePlaceX = building.iteratePlacesByDirection(Side.Right, place.coordinate);
+                    const iteratePlaceY = building.iteratePlacesByDirection(Side.Bottom, place.coordinate);
 
-                if (sideX && sideY) {
-                    const iteratePlaceX = building.iteratePlacesByDirection(sideX, place.coordinate);
-                    const iteratePlaceY = building.iteratePlacesByDirection(sideY, place.coordinate);
-
-                    let lastPlaceX: ReadOnlyPlace = place;
-                    for (const newPlace of iteratePlaceX) {
-                        let currentPlace = newPlace;
-                        if (place.y !== currentPlace.y) {
-                            currentPlace = lastPlaceX;
-                        }
-                        lastPlaceX = currentPlace;
-                        if (!utils.isWall(currentPlace) || currentPlace !== newPlace) {
-                            if (newPlace.x > place.x) {
-                                building.addWall(new Wall(place.coordinate, currentPlace.coordinate));
-                            } else {
-                                building.addWall(new Wall(currentPlace.coordinate, place.coordinate));
-                            }
-                            break;
-                        }
-                        if (place.x !== newPlace.x) break;
-                    }
-
-                    let lastPlaceY: ReadOnlyPlace = place;
-                    for (const newPlace of iteratePlaceY) {
-                        let currentPlace = newPlace;
-                        if (place.x !== currentPlace.x) {
-                            currentPlace = lastPlaceY;
-                        }
-                        lastPlaceY = currentPlace;
-                        if (!utils.isWall(currentPlace) || currentPlace !== newPlace) {
-                            if (currentPlace.y > place.y) {
-                                building.addWall(new Wall(place.coordinate, currentPlace.coordinate));
-                            } else {
-                                building.addWall(new Wall(currentPlace.coordinate, place.coordinate));
-                            }
-                            break;
-                        }
-                        if (place.x !== newPlace.x) break;
-                    }
+                    iterateAddWall(iteratePlaceX, "x");
+                    iterateAddWall(iteratePlaceY, "y");
                 }
             }
         }
@@ -125,15 +125,17 @@ export class BuildingBuilder implements IBuilder {
 
     private createDoors(building: Building) {
         for (const wall of building.walls) {
-            const corner1 = building.getPlace(wall.corner1);
-            const corner2 = building.getPlace(wall.corner2);
-            const openingType: number = getRandom(1, 5);
-            this.createDoor(building, corner1, corner2, openingType);
+            if (!wall.outer) {
+                const corner1 = building.getPlace(wall.corner1);
+                const corner2 = building.getPlace(wall.corner2);
+                const openingType: number = getRandom(1, 7);
+                this.createDoor(building, corner1, corner2, openingType);
+            }
         }
     }
 
     private createDoor(building: Building, corner1: Coordinate, corner2: Coordinate, openingType: number) {
-        if (openingType === 1) {
+        if (openingType <= 4) {
             // Door
             let door: Coordinate;
             if (corner1.x === corner2.x) {
@@ -142,7 +144,7 @@ export class BuildingBuilder implements IBuilder {
                 door = { x: getRandom(corner1.x + 1, corner2.x - 1), y: corner1.y };
             }
             building.changePlaceType(door, PlaceType.Door);
-        } else if (openingType === 2) {
+        } else if (openingType <= 6) {
             // Big Door
             const getRandomSize = (maxValue: number) => {
                 if (maxValue > 3) return getRandom(2, maxValue - 1);
@@ -160,7 +162,7 @@ export class BuildingBuilder implements IBuilder {
                 } else {
                     randomStartPosition = getRandom(corner1.y + 1, corner2.y - randomSize);
                     for (let y = randomStartPosition; y < randomStartPosition + randomSize; y++) {
-                        building.changePlaceType({ x: corner1.x, y }, PlaceType.Door);
+                        building.changePlaceType({ x: corner1.x, y }, PlaceType.Gate);
                     }
                 }
             } else {
@@ -172,19 +174,19 @@ export class BuildingBuilder implements IBuilder {
                 } else {
                     randomStartPosition = getRandom(corner1.x, corner2.x - randomSize);
                     for (let x = randomStartPosition; x < randomStartPosition + randomSize; x++) {
-                        building.changePlaceType({ x, y: corner1.y }, PlaceType.Door);
+                        building.changePlaceType({ x, y: corner1.y }, PlaceType.Gate);
                     }
                 }
             }
-        } else if (openingType === 3) {
+        } else if (openingType <= 7) {
             // Remove Wall
             if (corner1.x === corner2.x) {
                 for (let y = corner1.y + 1; y < corner2.y; y++) {
-                    building.changePlaceType({ x: corner1.x, y }, PlaceType.Door);
+                    building.changePlaceType({ x: corner1.x, y }, PlaceType.Floor);
                 }
             } else {
                 for (let x = corner1.x + 1; x < corner2.x; x++) {
-                    building.changePlaceType({ x, y: corner1.y }, PlaceType.Door);
+                    building.changePlaceType({ x, y: corner1.y }, PlaceType.Floor);
                 }
             }
         }
@@ -222,7 +224,7 @@ export class BuildingBuilder implements IBuilder {
             const newX = place.x;
             const newY = place.y;
 
-            const corner = utils.isCorner(building, { x: newX, y: newY });
+            const corner = utils.isCorner(building.getPlace({ x: newX, y: newY }));
             const wall = building.getPlaceType({ x: newX, y: newY }) === PlaceType.Wall;
 
             let position: Coordinate | null = null;

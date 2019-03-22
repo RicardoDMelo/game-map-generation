@@ -4,10 +4,7 @@ import { Dimensions } from "../models/dimensions";
 import { Coordinate } from "../models/coordinate";
 import { ConsolePrinter } from "../printers/console.printer";
 import { ReadOnlyPlace } from "../models/readonly-place";
-
-export function isWall(place: ReadOnlyPlace | null): boolean {
-    return place != null && place.type === PlaceType.Wall;
-}
+import { Wall } from "../models/wall";
 
 export function showOnConsole(building: Building) {
     const printer = new ConsolePrinter();
@@ -55,18 +52,34 @@ export function hasEnoughSpace(building: Building, roomSize: Dimensions, positio
     return isEmpty && isEnoughWidth && isEnoughHeight;
 }
 
-export function isCorner(building: Building, position: Coordinate): boolean {
-    const placeType = building.getPlaceType(position);
-    if (placeType === PlaceType.Wall) {
-        const leftPosition: Coordinate = { x: position.x - 1, y: position.y };
-        const rightPosition: Coordinate = { x: position.x + 1, y: position.y };
-        const topPosition: Coordinate = { x: position.x, y: position.y + 1 };
-        const bottomPosition: Coordinate = { x: position.x - 1, y: position.y - 1 };
+export function isWall(place: ReadOnlyPlace | null): boolean {
+    return place != null && place.type === PlaceType.Wall;
+}
 
-        const isLeft = building.getPlaceType(leftPosition) === PlaceType.Wall;
-        const isRight = building.getPlaceType(rightPosition) === PlaceType.Wall;
-        const isTop = building.getPlaceType(topPosition) === PlaceType.Wall;
-        const isBottom = building.getPlaceType(bottomPosition) === PlaceType.Wall;
+export function isOuterWall(building: Building, wall: Wall): boolean {
+    for (let y = wall.corner1.y; y <= wall.corner2.y; y++) {
+        for (let x = wall.corner1.x; x <= wall.corner2.x; x++) {
+            const place: ReadOnlyPlace = building.getPlace({ x, y });
+            if (isWall(place)) {
+                const isLeft = place.left.type === PlaceType.Empty;
+                const isRight = place.right.type === PlaceType.Empty;
+                const isTop = place.top.type === PlaceType.Empty;
+                const isBottom = place.bottom.type === PlaceType.Empty;
+
+                if (!isCorner(place) && (isLeft || isRight || isTop || isBottom))
+                    return true;
+            }
+        }
+    }
+    return false;
+}
+
+export function isCorner(place: ReadOnlyPlace): boolean {
+    if (isWall(place)) {
+        const isLeft = isWall(place.left);
+        const isRight = isWall(place.right);
+        const isTop = isWall(place.top);
+        const isBottom = isWall(place.bottom);
 
         return (isLeft && isTop) || (isLeft && isBottom) || (isRight && isTop) || (isRight && isBottom);
     }

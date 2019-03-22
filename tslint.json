@@ -13,7 +13,8 @@
         "trailing-comma": false,
         "align": false,
         "curly": false,
-        "variable-name": [true, "ban-keywords", "check-format", "allow-leading-underscore"]
+        "variable-name": [true, "ban-keywords", "check-format", "allow-leading-underscore"],
+        "interface-over-type-literal": false
     },
     "rulesDirectory": []
 }
