@@ -55,6 +55,9 @@ export function hasEnoughSpace(building: Building, roomSize: Dimensions, positio
 export function isWall(place: ReadOnlyPlace | null): boolean {
     return place != null && place.type === PlaceType.Wall;
 }
+export function isLooseEnd(building: Building, wall: Wall): boolean {
+    return !isCorner(building.getPlace(wall.corner1)) || !isCorner(building.getPlace(wall.corner1));
+}
 
 export function isOuterWall(building: Building, wall: Wall): boolean {
     for (let y = wall.corner1.y; y <= wall.corner2.y; y++) {

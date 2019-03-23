@@ -4,7 +4,7 @@ import { PlaceType } from "../enums/place-type";
 import { Coordinate } from "./coordinate";
 import { Wall } from "./wall";
 import _ from "underscore";
-import { isOuterWall } from "../builders/building-utils.builder";
+import { isOuterWall, isLooseEnd } from "../builders/building-utils.builder";
 
 export class Building extends FiniteChart {
     private _walls: Wall[] = [];
@@ -31,11 +31,16 @@ export class Building extends FiniteChart {
         }
     }
 
+    public cleanWalls() {
+        this._walls = [];
+    }
+
     public addWall(wall: Wall) {
         const exists = _.any(this._walls, (el) => el.corner1.x === wall.corner1.x && el.corner2.x === wall.corner2.x &&
             el.corner1.y === wall.corner1.y && el.corner2.y === wall.corner2.y);
         if (!exists) {
             wall.outer = isOuterWall(this, wall);
+            wall.looseEnd = isLooseEnd(this, wall);
             this._walls.push(wall);
         }
     }

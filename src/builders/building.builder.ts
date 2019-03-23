@@ -56,20 +56,24 @@ export class BuildingBuilder implements IBuilder {
         } while (!filled);
         this.removeDoubleWalls(building);
         this.defineWalls(building);
-        // utils.showOnConsole(building);
+        this.removeWalls(building);
+        // Redefine walls
+        this.defineWalls(building);
         this.createDoors(building);
     }
 
     private defineWalls(building: Building) {
+        building.cleanWalls();
         for (const place of building.iteratePlaces()) {
             const iterateAddWall = (iterator: IterableIterator<ReadOnlyPlace>, direction: string) => {
                 const directionIterate = direction === "y" ? "y" : "x";
                 const directionFixed = direction === "x" ? "y" : "x";
                 let lastPlace: ReadOnlyPlace = place;
+
                 for (const newPlace of iterator) {
                     let currentPlace = newPlace;
                     if (place.x !== newPlace.x || place.y !== newPlace.y) {
-                        if (place[directionFixed] !== currentPlace[directionFixed]) {
+                        if (place[directionFixed] !== currentPlace[directionFixed] || !utils.isWall(newPlace)) {
                             currentPlace = lastPlace;
                         }
                         lastPlace = currentPlace;
@@ -123,73 +127,121 @@ export class BuildingBuilder implements IBuilder {
         }
     }
 
-    private createDoors(building: Building) {
+    private removeWalls(building: Building) {
         for (const wall of building.walls) {
             if (!wall.outer) {
                 const corner1 = building.getPlace(wall.corner1);
                 const corner2 = building.getPlace(wall.corner2);
-                const openingType: number = getRandom(1, 7);
-                this.createDoor(building, corner1, corner2, openingType);
+                const openingType: number = getRandom(1, 10);
+                if (openingType === 2)
+                    this.removeWall(building, corner1, corner2);
             }
         }
     }
 
-    private createDoor(building: Building, corner1: Coordinate, corner2: Coordinate, openingType: number) {
-        if (openingType <= 4) {
-            // Door
-            let door: Coordinate;
-            if (corner1.x === corner2.x) {
-                door = { x: corner1.x, y: getRandom(corner1.y + 1, corner2.y - 1) };
-            } else {
-                door = { x: getRandom(corner1.x + 1, corner2.x - 1), y: corner1.y };
-            }
-            building.changePlaceType(door, PlaceType.Door);
-        } else if (openingType <= 6) {
-            // Big Door
-            const getRandomSize = (maxValue: number) => {
-                if (maxValue > 3) return getRandom(2, maxValue - 1);
-                else return 2;
-            };
-            let delta: number;
-            let randomSize: number;
-            let randomStartPosition: number;
-            if (corner1.x === corner2.x) {
-                delta = corner2.y - corner1.y - 1;
-                randomSize = getRandomSize(delta);
-                if (corner2.y - randomSize < corner1.y + 1) {
-                    // can't create a wall
-                    openingType = 3;
-                } else {
-                    randomStartPosition = getRandom(corner1.y + 1, corner2.y - randomSize);
-                    for (let y = randomStartPosition; y < randomStartPosition + randomSize; y++) {
-                        building.changePlaceType({ x: corner1.x, y }, PlaceType.Gate);
-                    }
-                }
-            } else {
-                delta = corner2.x - corner1.x - 1;
-                randomSize = getRandomSize(delta);
-                if (corner2.x - randomSize < corner1.x + 1) {
-                    // can't create a wall
-                    openingType = 3;
-                } else {
-                    randomStartPosition = getRandom(corner1.x, corner2.x - randomSize);
-                    for (let x = randomStartPosition; x < randomStartPosition + randomSize; x++) {
-                        building.changePlaceType({ x, y: corner1.y }, PlaceType.Gate);
-                    }
-                }
-            }
-        } else if (openingType <= 7) {
-            // Remove Wall
-            if (corner1.x === corner2.x) {
-                for (let y = corner1.y + 1; y < corner2.y; y++) {
-                    building.changePlaceType({ x: corner1.x, y }, PlaceType.Floor);
-                }
-            } else {
-                for (let x = corner1.x + 1; x < corner2.x; x++) {
-                    building.changePlaceType({ x, y: corner1.y }, PlaceType.Floor);
+    private createDoors(building: Building) {
+        for (const wall of building.walls) {
+            if (!wall.outer && !wall.looseEnd) {
+                const corner1 = building.getPlace(wall.corner1);
+                const corner2 = building.getPlace(wall.corner2);
+                if (utils.isCorner(corner1) && utils.isCorner(corner2)) {
+                    this.createDoor(building, corner1, corner2);
                 }
             }
         }
+    }
+
+    private removeWall(building: Building, corner1: Coordinate, corner2: Coordinate) {
+        if (corner1.x === corner2.x) {
+            for (let y = corner1.y + 1; y < corner2.y; y++) {
+                building.changePlaceType({ x: corner1.x, y }, PlaceType.Floor);
+            }
+        } else {
+            for (let x = corner1.x + 1; x < corner2.x; x++) {
+                building.changePlaceType({ x, y: corner1.y }, PlaceType.Floor);
+            }
+        }
+
+        const corner1Place = building.getPlace(corner1);
+        this.removeLooseWalls(building, corner1Place);
+        const corner2Place = building.getPlace(corner2);
+        this.removeLooseWalls(building, corner2Place);
+    }
+
+    private removeLooseWalls(building: Building, place: ReadOnlyPlace) {
+        const iterateRemoveWalls = (side: Side) => {
+            let position: "x" | "y" = "y";
+            let sideText: "left" | "right" | "top" | "bottom" = "left";
+            switch (side) {
+                case Side.Left:
+                    position = "y";
+                    sideText = "left";
+                    break;
+                case Side.Right:
+                    position = "y";
+                    sideText = "right";
+                    break;
+                case Side.Top:
+                    position = "x";
+                    sideText = "top";
+                    break;
+                case Side.Bottom:
+                    position = "x";
+                    sideText = "bottom";
+                    break;
+            }
+
+            let iterator = building.iteratePlacesByDirection(side, place);
+            let remove: boolean = false;
+            for (const newPlace of iterator) {
+                if (newPlace !== place) {
+                    if (newPlace[position] !== place[position]) break;
+                    if (!utils.isCorner(newPlace) && !utils.isWall(newPlace[sideText])) {
+                        remove = true;
+                        break;
+                    }
+                    if (utils.isCorner(newPlace)) break;
+                }
+            }
+            if (remove) {
+                iterator = building.iteratePlacesByDirection(side, place);
+                for (const newPlace of iterator) {
+                    if (newPlace[position] !== place[position]) break;
+                    building.changePlaceType(newPlace, PlaceType.Floor);
+                    if (!utils.isCorner(newPlace) && !utils.isWall(newPlace[sideText])) {
+                        break;
+                    }
+                }
+            }
+        };
+
+        if (!utils.isCorner(place)) {
+            if (utils.isWall(place.left) && !utils.isWall(place.right)) {
+                iterateRemoveWalls(Side.Left);
+            } else if (utils.isWall(place.right) && !utils.isWall(place.left)) {
+                iterateRemoveWalls(Side.Right);
+            } else if (utils.isWall(place.top) && !utils.isWall(place.bottom)) {
+                iterateRemoveWalls(Side.Top);
+            } else if (utils.isWall(place.bottom) && !utils.isWall(place.top)) {
+                iterateRemoveWalls(Side.Bottom);
+            } else if (!utils.isWall(place.left) &&
+                !utils.isWall(place.right) &&
+                !utils.isWall(place.bottom) &&
+                !utils.isWall(place.top)) {
+                building.changePlaceType(place, PlaceType.Floor);
+            }
+        }
+    }
+
+    private createDoor(building: Building, corner1: Coordinate, corner2: Coordinate) {
+        // Door
+        let door: Coordinate;
+        if (corner1.x === corner2.x) {
+            door = { x: corner1.x, y: getRandom(corner1.y + 1, corner2.y - 1) };
+        } else {
+            door = { x: getRandom(corner1.x + 1, corner2.x - 1), y: corner1.y };
+        }
+        building.changePlaceType(door, PlaceType.Door);
     }
 
     private createRoom(building: Building, roomMaxDimension: Dimensions) {
