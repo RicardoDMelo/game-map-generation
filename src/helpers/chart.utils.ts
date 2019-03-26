@@ -1,14 +1,16 @@
 import { PlaceType } from "../enums/place-type";
-import { Building } from "../models/building";
+import { Building } from "../models/charts/building";
 import { Dimensions } from "../models/dimensions";
 import { Coordinate } from "../models/coordinate";
 import { ConsolePrinter } from "../printers/console.printer";
 import { ReadOnlyPlace } from "../models/readonly-place";
 import { Wall } from "../models/wall";
+import { FiniteChart } from "../models/charts/finite-chart";
+import { Chart } from "../models/charts/chart";
 
-export function showOnConsole(building: Building) {
+export function showOnConsole(chart: Chart) {
     const printer = new ConsolePrinter();
-    printer.print(building);
+    printer.print(chart);
 }
 
 export function verifyIfDoubleWallX(place: ReadOnlyPlace | null, alreadyRemovedBottom: boolean) {
@@ -44,10 +46,10 @@ export function verifyIfDoubleWallY(place: ReadOnlyPlace | null, alreadyRemovedL
     return false;
 }
 
-export function hasEnoughSpace(building: Building, roomSize: Dimensions, position: Coordinate): boolean {
-    const isEmpty = building.getPlaceType(position) === PlaceType.Empty;
-    const isEnoughWidth = building.isEnoughWidth(position, roomSize.width);
-    const isEnoughHeight = building.isEnoughHeight(position, roomSize.height);
+export function hasEnoughSpace(chart: FiniteChart, roomSize: Dimensions, position: Coordinate): boolean {
+    const isEmpty = chart.getPlaceType(position) === PlaceType.Empty;
+    const isEnoughWidth = chart.isEnoughWidth(position, roomSize.width);
+    const isEnoughHeight = chart.isEnoughHeight(position, roomSize.height);
 
     return isEmpty && isEnoughWidth && isEnoughHeight;
 }
@@ -55,14 +57,14 @@ export function hasEnoughSpace(building: Building, roomSize: Dimensions, positio
 export function isWall(place: ReadOnlyPlace | null): boolean {
     return place != null && place.type === PlaceType.Wall;
 }
-export function isLooseEnd(building: Building, wall: Wall): boolean {
-    return !isCorner(building.getPlace(wall.corner1)) || !isCorner(building.getPlace(wall.corner1));
+export function isLooseEnd(chart: FiniteChart, wall: Wall): boolean {
+    return !isCorner(chart.getPlace(wall.corner1)) || !isCorner(chart.getPlace(wall.corner1));
 }
 
-export function isOuterWall(building: Building, wall: Wall): boolean {
+export function isOuterWall(chart: FiniteChart, wall: Wall): boolean {
     for (let y = wall.corner1.y; y <= wall.corner2.y; y++) {
         for (let x = wall.corner1.x; x <= wall.corner2.x; x++) {
-            const place: ReadOnlyPlace = building.getPlace({ x, y });
+            const place: ReadOnlyPlace = chart.getPlace({ x, y });
             if (isWall(place)) {
                 const isLeft = place.left.type === PlaceType.Empty;
                 const isRight = place.right.type === PlaceType.Empty;

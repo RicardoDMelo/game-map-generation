@@ -1,10 +1,10 @@
 import { Chart } from "./chart";
-import { Dimensions } from "./dimensions";
-import { PlaceType } from "../enums/place-type";
-import { Coordinate } from "./coordinate";
-import { Place } from "./place";
-import { ReadOnlyPlace } from "./readonly-place";
-import { Side } from "../enums/room-side";
+import { Dimensions } from "../dimensions";
+import { PlaceType } from "../../enums/place-type";
+import { Coordinate } from "../coordinate";
+import { Place } from "../place";
+import { ReadOnlyPlace } from "../readonly-place";
+import { Side } from "../../enums/room-side";
 
 export class FiniteChart extends Chart {
 

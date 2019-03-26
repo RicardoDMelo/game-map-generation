@@ -1,4 +1,4 @@
-import { Building } from "../models/building";
+import { Building } from "../models/charts/building";
 import { getRandom } from "../helpers/utils";
 import {
     BUILDING_WIDTH_MAX,
@@ -9,13 +9,13 @@ import {
     ROOM_HEIGHT_MIN
 } from "../helpers/consts";
 import { IBuilder } from "./interface.builder";
-import { Chart } from "../models/chart";
+import { Chart } from "../models/charts/chart";
 import { Dimensions } from "../models/dimensions";
 import { Coordinate } from "../models/coordinate";
 import { PlaceType } from "../enums/place-type";
 import { TextFilePrinter } from "../printers/text-file.printer";
 import { Place } from "../models/place";
-import * as utils from "./building-utils.builder";
+import * as utils from "../helpers/chart.utils";
 import _ from "underscore";
 import { Side } from "../enums/room-side";
 import { Wall } from "../models/wall";

@@ -1,4 +1,5 @@
-import { Chart } from "../models/chart";
+
+import { Chart } from "../models/charts/chart";
 import { Place } from "../models/place";
 
 export class TextPrinter {

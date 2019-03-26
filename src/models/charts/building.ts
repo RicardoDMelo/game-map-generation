@@ -1,10 +1,10 @@
 import { FiniteChart } from "./finite-chart";
-import { Dimensions } from "./dimensions";
-import { PlaceType } from "../enums/place-type";
-import { Coordinate } from "./coordinate";
-import { Wall } from "./wall";
+import { Dimensions } from "../dimensions";
+import { PlaceType } from "../../enums/place-type";
+import { Coordinate } from "../coordinate";
+import { Wall } from "../wall";
 import _ from "underscore";
-import { isOuterWall, isLooseEnd } from "../builders/building-utils.builder";
+import { isOuterWall, isLooseEnd } from "../../helpers/chart.utils";
 
 export class Building extends FiniteChart {
     private _walls: Wall[] = [];

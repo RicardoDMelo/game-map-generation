@@ -1,4 +1,4 @@
-import { Chart } from "../models/chart";
+import { Chart } from "../models/charts/chart";
 import fs from "fs";
 import { IPrinter } from "./interface.printer";
 import { TextPrinter } from "./text.printer";

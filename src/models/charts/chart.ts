@@ -1,7 +1,7 @@
-import { Place } from "./place";
-import { PlaceType } from "../enums/place-type";
-import { Coordinate } from "./coordinate";
-import { ReadOnlyPlace } from "./readonly-place";
+import { Place } from "./../place";
+import { PlaceType } from "../../enums/place-type";
+import { Coordinate } from "./../coordinate";
+import { ReadOnlyPlace } from "./../readonly-place";
 
 export class Chart {
     public started = false;
