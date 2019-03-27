@@ -11,11 +11,13 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/seedrandom": "^2.4.27",
     "@types/underscore": "^1.8.13",
     "typescript": "^3.3.3333"
   },
   "dependencies": {
     "@types/node": "^11.11.3",
+    "seedrandom": "^3.0.1",
     "underscore": "^1.9.1"
   }
 }

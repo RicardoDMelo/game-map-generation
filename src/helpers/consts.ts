@@ -6,3 +6,5 @@ export const ROOM_HEIGHT_MIN = 2;
 
 export const ROOM_WIDTH_MAX = 8;
 export const ROOM_HEIGHT_MAX = 8;
+
+export const ROOM_COUNT = 30;

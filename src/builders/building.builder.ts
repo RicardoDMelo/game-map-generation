@@ -1,5 +1,4 @@
 import { Building } from "../models/charts/building";
-import { getRandom } from "../helpers/utils";
 import {
     BUILDING_WIDTH_MAX,
     BUILDING_HEIGHT_MAX,
@@ -20,6 +19,7 @@ import _ from "underscore";
 import { Side } from "../enums/room-side";
 import { Wall } from "../models/wall";
 import { ReadOnlyPlace } from "../models/readonly-place";
+import { getRandom } from "../helpers/random-seed";
 
 export class BuildingBuilder implements IBuilder {
     public generateMap = (): Chart => {
