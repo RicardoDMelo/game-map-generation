@@ -11,15 +11,15 @@ import { IBuilder } from "./interface.builder";
 import { Chart } from "../models/charts/chart";
 import { Dimensions } from "../models/dimensions";
 import { Coordinate } from "../models/coordinate";
-import { PlaceType } from "../enums/place-type";
 import { TextFilePrinter } from "../printers/text-file.printer";
 import { Place } from "../models/place";
 import * as utils from "../helpers/chart.utils";
 import _ from "underscore";
-import { Side } from "../enums/room-side";
 import { Wall } from "../models/wall";
 import { ReadOnlyPlace } from "../models/readonly-place";
 import { getRandom } from "../helpers/random-seed";
+import { Side } from "../models/enums/room-side";
+import { PlaceType } from "../models/enums/place-type";
 
 export class BuildingBuilder implements IBuilder {
     public generateMap = (): Chart => {
@@ -268,8 +268,8 @@ export class BuildingBuilder implements IBuilder {
 
     private getRoomPosition(building: Building, roomSize: Dimensions): Coordinate | null {
         const roomPosition: Coordinate = {
-            x: getRandom(1, building.maxWidth - roomSize.width - 1),
-            y: getRandom(1, building.maxHeight - roomSize.height - 1)
+            x: getRandom(1, building.width - roomSize.width - 1),
+            y: getRandom(1, building.height - roomSize.height - 1)
         };
         const iteratePlace = building.iteratePlacesByDirection(Side.Right, roomPosition);
         for (const place of iteratePlace) {
@@ -332,7 +332,7 @@ export class BuildingBuilder implements IBuilder {
                 const removeY: boolean = utils.verifyIfDoubleWallX(place, isPlaceRemoved);
                 const removeX: boolean = utils.verifyIfDoubleWallY(place, isPlaceRemoved);
                 if (removeY || removeX) {
-                    if (removedPlaces[place.x] == null) removedPlaces[place.x] = {};
+                    if (!removedPlaces[place.x]) removedPlaces[place.x] = {};
                     removedPlaces[place.x][place.y] = true;
                     building.changePlaceType(place.coordinate, PlaceType.Floor);
                 }

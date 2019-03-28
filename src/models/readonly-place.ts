@@ -1,6 +1,6 @@
-import { PlaceType } from "../enums/place-type";
 import { Place } from "./place";
 import { Coordinate } from "./coordinate";
+import { PlaceType } from "./enums/place-type";
 
 export class ReadOnlyPlace {
     private place: Place;

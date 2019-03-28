@@ -1,5 +1,5 @@
-import { PlaceType } from "../enums/place-type";
 import { Coordinate } from "./coordinate";
+import { PlaceType } from "./enums/place-type";
 
 export class Place {
     public type: PlaceType = PlaceType.Empty;

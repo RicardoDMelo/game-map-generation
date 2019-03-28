@@ -1,17 +1,17 @@
 import { Chart } from "./chart";
 import { Dimensions } from "../dimensions";
-import { PlaceType } from "../../enums/place-type";
 import { Coordinate } from "../coordinate";
 import { Place } from "../place";
 import { ReadOnlyPlace } from "../readonly-place";
-import { Side } from "../../enums/room-side";
+import { Side } from "../enums/room-side";
+import { PlaceType } from "../enums/place-type";
 
 export class FiniteChart extends Chart {
 
-    public get maxHeight(): number {
+    public get height(): number {
         return this.dimensions.height;
     }
-    public get maxWidth(): number {
+    public get width(): number {
         return this.dimensions.width;
     }
     public dimensions: Dimensions;
@@ -27,38 +27,38 @@ export class FiniteChart extends Chart {
         const currentPosition: Coordinate = { x: startPosition.x, y: startPosition.y };
         const getPlace = (x: number, y: number) => {
             const coor: Coordinate = { x, y };
-            currentPosition.x = startPosition.x + coor.x < this.maxWidth ?
-                startPosition.x + coor.x : (startPosition.x - this.maxWidth + coor.x);
+            currentPosition.x = startPosition.x + coor.x < this.width ?
+                startPosition.x + coor.x : (startPosition.x - this.width + coor.x);
 
-            currentPosition.y = startPosition.y + coor.y < this.maxHeight ?
-                startPosition.y + coor.y : (startPosition.y - this.maxHeight + coor.y);
+            currentPosition.y = startPosition.y + coor.y < this.height ?
+                startPosition.y + coor.y : (startPosition.y - this.height + coor.y);
             return this.getPlace(currentPosition);
         };
         switch (side) {
             case Side.Right:
-                for (let y = 0; y <= this.maxHeight; y++) {
-                    for (let x = 0; x <= this.maxWidth; x++) {
+                for (let y = 0; y < this.height; y++) {
+                    for (let x = 0; x < this.width; x++) {
                         yield getPlace(x, y);
                     }
                 }
                 break;
             case Side.Left:
-                for (let y = this.maxHeight; y < 0; y--) {
-                    for (let x = this.maxWidth; x < 0; x--) {
+                for (let y = this.height - 1; y >= 0; y--) {
+                    for (let x = this.width - 1; x >= 0; x--) {
                         yield getPlace(x, y);
                     }
                 }
                 break;
             case Side.Top:
-                for (let x = 0; x <= this.maxWidth; x++) {
-                    for (let y = 0; y <= this.maxHeight; y++) {
+                for (let x = 0; x < this.width; x++) {
+                    for (let y = 0; y < this.height; y++) {
                         yield getPlace(x, y);
                     }
                 }
                 break;
             case Side.Bottom:
-                for (let x = this.maxWidth; x < 0; x--) {
-                    for (let y = this.maxHeight; y < 0; y--) {
+                for (let x = this.width - 1; x >= 0; x--) {
+                    for (let y = this.height - 1; y >= 0; y--) {
                         yield getPlace(x, y);
                     }
                 }
@@ -67,19 +67,23 @@ export class FiniteChart extends Chart {
     }
 
     public *iteratePlaces(): IterableIterator<ReadOnlyPlace> {
-        for (let y = 0; y <= this.maxHeight; y++) {
-            for (let x = 0; x <= this.maxWidth; x++) {
+        for (let y = 0; y < this.height; y++) {
+            for (let x = 0; x < this.width; x++) {
                 yield this.getPlace({ x, y });
             }
         }
     }
 
     public *iteratePosition(): IterableIterator<Coordinate> {
-        for (let y = 0; y <= this.maxHeight; y++) {
-            for (let x = 0; x <= this.maxWidth; x++) {
+        for (let y = 0; y < this.height; y++) {
+            for (let x = 0; x < this.width; x++) {
                 yield { x, y };
             }
         }
+    }
+
+    public isInMapRange(position: Coordinate) {
+        return position.x >= 0 && position.x < this.width && position.y >= 0 && position.y < this.height;
     }
 
     public isEnoughWidth(startPosition: Coordinate, widthCheck: number): boolean {
@@ -94,7 +98,7 @@ export class FiniteChart extends Chart {
         let quantity = 0;
 
         if (position.x > 0 && position.y > 0) {
-            for (let currentPosition = position.x; currentPosition < this.maxWidth - 1; currentPosition++) {
+            for (let currentPosition = position.x; currentPosition < this.width - 1; currentPosition++) {
                 const currentPlace: Place = this.getPlace({ x: currentPosition, y: position.y });
                 if (currentPlace != null && currentPlace.type === PlaceType.Empty) {
                     quantity++;
@@ -110,7 +114,7 @@ export class FiniteChart extends Chart {
         let quantity = 0;
 
         if (position.x > 0 && position.y > 0) {
-            for (let currentPosition = position.y; currentPosition < this.maxHeight - 1; currentPosition++) {
+            for (let currentPosition = position.y; currentPosition < this.height - 1; currentPosition++) {
                 const currentPlace: Place = this.getPlace({ x: position.x, y: currentPosition });
                 if (currentPlace != null && currentPlace.type === PlaceType.Empty) {
                     quantity++;

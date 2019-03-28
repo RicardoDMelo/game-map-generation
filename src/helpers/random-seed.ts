@@ -7,5 +7,5 @@ export function defineSeed(seed: string) {
 }
 
 export function getRandom(min: number, max: number): number {
-    return Math.round(rng() * (max - min) + min);
+    return Math.floor(rng() * (max + 0.99999 - min) + min);
 }
