@@ -24,8 +24,6 @@ import { PlaceType } from "../models/enums/place-type";
 export class BuildingBuilder implements IBuilder {
     public generateMap = (): Chart => {
         const buildingDimensions: Dimensions = {
-            // width: getRandom(BUILDING_WIDTH_MAX / 2, BUILDING_WIDTH_MAX),
-            // height: getRandom(BUILDING_HEIGHT_MAX / 2, BUILDING_HEIGHT_MAX)
             width: getRandom(BUILDING_WIDTH_MAX, BUILDING_WIDTH_MAX),
             height: getRandom(BUILDING_HEIGHT_MAX, BUILDING_HEIGHT_MAX)
         };

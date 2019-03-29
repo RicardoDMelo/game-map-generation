@@ -1,6 +1,8 @@
 export const DUNGEON_WIDTH_MAX = 60;
 export const DUNGEON_HEIGHT_MAX = 100;
 
+export const DUNGEON_FILL_PERCENT = 40;
+
 export const BUILDING_WIDTH_MAX = 50;
 export const BUILDING_HEIGHT_MAX = 50;
 
